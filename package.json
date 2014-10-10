@@ -1,12 +1,12 @@
 {
-  "name"         : "node-web-scrape",
-  "version"      : "0.0.1",
-  "description"  : "Scrape le web.",
-  "main"         : "server.js",
-  "author"       : "Scotch",
-  "dependencies" : {
-    "express"    : "latest",
-    "request"    : "latest",
-    "cheerio"    : "latest"
+  "name": "akademika-scraper",
+  "version": "0.0.1",
+  "description": "A web scraper for akademika.no",
+  "main": "server.js",
+  "author": "Nataniel Pedersen",
+  "dependencies": {
+    "cheerio": "^0.17.0",
+    "express": "^4.9.7",
+    "request": "^2.45.0"
   }
 }
