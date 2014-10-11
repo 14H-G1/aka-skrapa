@@ -16,6 +16,7 @@ function formatBook(rawString) {
 	title = split[0];
 
 	if (split[0].indexOf(" | ") == -1) {
+		/* Only run if page is book */
 
 		if (split[1].indexOf(", ") == -1) {
 			/* If author name doesn't contain ',' */
@@ -40,9 +41,8 @@ function formatBook(rawString) {
 		json.title = title;
 		json.authors = authors;
 		json.isbn = isbn;
-		console.log(json);
-
 		return json;
+
 	}
 }
 
@@ -80,8 +80,13 @@ app.get('/node/:from/:to', function(req, res) {
 		from++;
 	}
 
+	res.send("Started parsing " + urls.length + " pages...");
+
 	console.log(urls);
 	console.log(urls.length);
+
+	var books = [];
+	var completedRequests = 0;
 
 	urls.forEach(function(url) {
 		request(url, function(error, response, html) {
@@ -90,13 +95,24 @@ app.get('/node/:from/:to', function(req, res) {
 				/* Scraping book title, author and isbn */
 				var $ = cheerio.load(html);
 				rawString = $('title').text();
-				var jsonRes = formatBook(rawString)
-				if (jsonRes != undefined) console.log(jsonRes);
+				var jsonRes = formatBook(rawString);
+				if (jsonRes != undefined) {
+					console.log(jsonRes);
+					books.push(jsonRes)
+				}
+
+			    completedRequests++;
+			    if (completedRequests == urls.length) {
+			        console.log(books);
+					fs.writeFile('books.json', JSON.stringify(books, null, 4), function(err){
+						console.log('File successfully written!');
+					});
+			    }
+
 			}
 
 		});
 	});
-
 
 });
 
