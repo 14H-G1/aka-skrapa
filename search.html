@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search json</title>
+    <style>
+        body { font-family: Helvetica;}
+        p { padding: 2.5px 0; margin: 2.5px 0; }
+        p:nth-child(even) { background-color: lightgrey }
+        input[type=text] { width: 70%; }
+        input[type=submit] {width: 25%; height: 30px; }
+    </style>
+</head>
+<body>
+    <input id="query" type="text" placeholder="Søk">
+    <input type="submit" onclick="search()">
+
+    <div class="result"></div>
+
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="functions.js"></script>
+</body>
+</html>

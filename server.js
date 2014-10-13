@@ -4,7 +4,6 @@ var request = require('request');
 var cheerio = require('cheerio');
 var app     = express();
 
-
 function formatBook(rawString) {
 	var title;
 	var authors = [];
@@ -41,6 +40,7 @@ function formatBook(rawString) {
 		json.title = title;
 		json.authors = authors;
 		json.isbn = isbn;
+
 		return json;
 
 	}
@@ -56,11 +56,13 @@ app.get('/node/:id', function(req, res) {
 			var $ = cheerio.load(html);
 			rawString = $('title').text();
 			var jsonRes = formatBook(rawString)
+			res.set('Content-Type', 'application/json');
 			res.send(jsonRes);
+			console.log(jsonRes);
 		}
 
 		fs.writeFile('book.json', JSON.stringify(jsonRes, null, 4), function(err){
-        	console.log('File successfully written!');
+        	console.log('> File successfully written!');
         });
 
 	});
@@ -75,18 +77,21 @@ app.get('/node/:from/:to', function(req, res) {
 	console.log(from);
 	console.log(to);
 
+	to++;
 	while (from < to) {
 		urls.push('http://www.akademika.no/node/' + from);
 		from++;
 	}
 
-	res.send("Started parsing " + urls.length + " pages...");
+	res.send("Started parsing " + (urls.length - 1) + " pages...");
 
 	console.log(urls);
-	console.log(urls.length);
+	console.log(urls.length - 1);
 
-	var books = [];
+	var books = { books: [] };
 	var completedRequests = 0;
+	var booksFound = 0;
+	var booksTotal = urls.length - 1;
 
 	urls.forEach(function(url) {
 		request(url, function(error, response, html) {
@@ -96,16 +101,20 @@ app.get('/node/:from/:to', function(req, res) {
 				var $ = cheerio.load(html);
 				rawString = $('title').text();
 				var jsonRes = formatBook(rawString);
+
 				if (jsonRes != undefined) {
-					console.log(jsonRes);
-					books.push(jsonRes)
+					booksFound++;
+					books.books.push(jsonRes)
 				}
 
+				process.stdout.write("> Found " + booksFound + " of " + booksTotal + ", " +
+									(booksTotal - completedRequests) + " books left. \r");
+
 			    completedRequests++;
+
 			    if (completedRequests == urls.length) {
-			        console.log(books);
-					fs.writeFile('books.json', JSON.stringify(books, null, 4), function(err){
-						console.log('File successfully written!');
+					fs.writeFile('books.json', JSON.stringify(books, null, 4), function(err) {
+						console.log('\n> File successfully written!');
 					});
 			    }
 
@@ -117,5 +126,5 @@ app.get('/node/:from/:to', function(req, res) {
 });
 
 app.listen('80')
-console.log('Magic happens on port 80');
+console.log('> 80 is the magic number.');
 exports = module.exports = app;
