@@ -4,18 +4,19 @@ var request = require('request');
 var cheerio = require('cheerio');
 var app     = express();
 
-function formatBook(rawString) {
+function formatBook(rawString, thisPrice) {
 	var title;
 	var authors = [];
 	var isbn;
 
-	var json = { title: "", authors: [], isbn: "" }
+	var json = { title: "", authors: [], price: "", isbn: "" }
 
 	split = rawString.split(" - ");
-	title = split[0];
 
 	if (split[0].indexOf(" | ") == -1) {
 		/* Only run if page is book */
+
+		title = split[0];
 
 		if (split[1].indexOf(", ") == -1) {
 			/* If author name doesn't contain ',' */
@@ -37,8 +38,17 @@ function formatBook(rawString) {
 			}
 		}
 
+		/* Remove duplicate authors */
+		for (var i = 1; i < authors.length; i++) {
+			if (authors[i-1] == authors[i]) {
+				authors.splice(i, 1);
+				break;
+			}
+		}
+
 		json.title = title;
 		json.authors = authors;
+		json.price = thisPrice;
 		json.isbn = isbn;
 
 		return json;
@@ -52,10 +62,22 @@ app.get('/node/:id', function(req, res) {
 	request(url, function(error, response, html) {
 
 		if (!error) {
-			/* Scraping book title, author and isbn */
+			var rawString;
+			var price;
+			var jsonRes;
 			var $ = cheerio.load(html);
+
+			/* Price from .tilbud */
+			price = $('.info .price-full .sell-price .tilbud').text();
+			price = price.replace('Nettpris: ', '');
+			price = price.replace(',-', '');
+			console.log(price);
+
+			/* Title, authors and isbn from <title> */
 			rawString = $('title').text();
-			var jsonRes = formatBook(rawString)
+			jsonRes = formatBook(rawString, price);
+
+			/* Send and log */
 			res.set('Content-Type', 'application/json');
 			res.send(jsonRes);
 			console.log(jsonRes);
@@ -74,8 +96,7 @@ app.get('/node/:from/:to', function(req, res) {
 	var from = req.params.from;
 	var to = req.params.to;
 
-	console.log(from);
-	console.log(to);
+	console.log("From " + from + " to " + to + ".");
 
 	to++;
 	while (from < to) {
@@ -95,10 +116,26 @@ app.get('/node/:from/:to', function(req, res) {
 		request(url, function(error, response, html) {
 
 			if (!error) {
-				/* Scraping book title, author and isbn */
+				var rawString;
+				var price;
+				var jsonRes;
 				var $ = cheerio.load(html);
+
+				/* Price from .tilbud */
+				price = $('.info .price-full .sell-price .tilbud').text();
+				if (price == '') {
+					price = $('.info .uc-price-vanlig').text();
+					price = price.replace(',-', '');
+				} else {
+					price = price.replace('Nettpris: ', '');
+					price = price.replace(',-', '');
+				}
+
+				/* Title, authors and isbn from <title> */
 				rawString = $('title').text();
-				var jsonRes = formatBook(rawString);
+
+				/* Send info for json formatting */
+				jsonRes = formatBook(rawString, price);
 
 				if (jsonRes != undefined) {
 					booksFound++;
