@@ -83,10 +83,8 @@ app.get('/node/:from/:to', function(req, res) {
 		from++;
 	}
 
-	res.send("Started parsing " + (urls.length - 1) + " pages...");
-
-	console.log(urls);
-	console.log(urls.length - 1);
+	res.send("Started parsing of " + (urls.length - 1) + " pages...");
+	console.log("> Started parsing of " + (urls.length - 1) + " pages...");
 
 	var books = { books: [] };
 	var completedRequests = 0;
@@ -107,8 +105,8 @@ app.get('/node/:from/:to', function(req, res) {
 					books.books.push(jsonRes)
 				}
 
-				process.stdout.write("> Found " + booksFound + " of " + booksTotal + ", " +
-									(booksTotal - completedRequests) + " books left. \r");
+				process.stdout.write("> Found " + booksFound + " books on " + completedRequests + " pages, " +
+									(booksTotal - completedRequests) + " pages left. \r");
 
 			    completedRequests++;
 
