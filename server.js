@@ -41,63 +41,65 @@ app.get('/node/:from/:to', function(req, res) {
 	urls.forEach(function(url) {
 
 		request(url, function(error, response, html) {
-			var $ = cheerio.load(html);
-			var rawTitle = $('title').text();
-			var splitTitle = rawTitle.split(" - ");
 
-			if (!error && response.statusCode == 200 && splitTitle[3] == "Bøker | Akademika.no") {
+			if (!error && response.statusCode == 200) {
 
-				var title;
-				var authors = [];
-				var price;
-				var isbn;
-				var jsonRes;
+				var $ = cheerio.load(html);
+				var rawTitle = "";
+				rawTitle = $('title').text();
+				var splitTitle = rawTitle.split(" - ");
 
-				/* Title from <title> */
-				title = splitTitle[0];
+				if (splitTitle[0] != undefined && rawTitle.indexOf("Bøker | Akademika.no") > -1) {
+					var title;
+					var authors = [];
+					var price;
+					var isbn;
+					var jsonRes;
 
-				/* Authors from .author-full */
-				$('.author-full a').each(function(i, elem) {
-					authors[i] = $(this).text();
-				});
+					/* Title from <title> */
+					title = splitTitle[0];
 
-				/* Formats authors name 'Surname, Firstname' -> 'Firstname Surname' */
-				for (var i = 0; i < authors.length; i++) {
-					if (authors[i].indexOf(", ") > -1) {
-						var fullname = authors[i].split(", ");
-						authors[i] = fullname[1] + " " + fullname[0];
+					/* Authors from .author-full */
+					$('.author-full a').each(function(i, elem) {
+						authors.push($(this).text());
+					});
+
+					/* Formats authors name 'Surname, Firstname' -> 'Firstname Surname' */
+					for (var i = 0; i < authors.length; i++) {
+						if (authors[i].indexOf(", ") > -1) {
+							var fullname = authors[i].split(", ");
+							authors[i] = fullname[1] + " " + fullname[0];
+						}
 					}
-				}
 
-				/* Checks for duplicate authors */
-				for (var i = 1; i < authors.length; i++) {
-					if (authors[i-1] == authors[i]) {
-						authors.splice(i, 1);
-						break;
+					/* Checks for duplicate authors */
+					for (var i = 1; i < authors.length; i++) {
+						if (authors[i-1] == authors[i]) {
+							authors.splice(i, 1);
+							break;
+						}
 					}
+
+					/* Price from .tilbud */
+					price = $('.info .price-full .sell-price .tilbud').text();
+					if (price == '') {
+						/* Hvis det er vanlig pris */
+						price = $('.info .uc-price-vanlig').text();
+						price = price.replace(',-', '');
+					} else {
+						/* Hvis det er nettpris */
+						price = price.replace('Nettpris: ', '');
+						price = price.replace(',-', '');
+					}
+
+					/* ISBN from <span itemprop="gtin13"> */
+					isbn = $('li span').attr('itemprop', 'gtin13').text();
+
+					/* Send info for json formatting */
+					jsonRes = formatBook(title, authors, price, isbn);
+					booksFile.books.push(jsonRes)
+					booksFound++;
 				}
-
-				/* Price from .tilbud */
-				price = $('.info .price-full .sell-price .tilbud').text();
-				if (price == '') {
-					/* Hvis det er vanlig pris */
-					price = $('.info .uc-price-vanlig').text();
-					price = price.replace(',-', '');
-				} else {
-					/* Hvis det er nettpris */
-					price = price.replace('Nettpris: ', '');
-					price = price.replace(',-', '');
-				}
-
-				/* ISBN from <span itemprop="gtin13"> */
-				isbn = $('li span').attr('itemprop', 'gtin13').text();
-
-				/* Send info for json formatting */
-				jsonRes = formatBook(title, authors, price, isbn);
-				console.log(jsonRes);
-				console.log();
-				booksFile.books.push(jsonRes)
-				booksFound++;
 
 			}
 
@@ -118,6 +120,6 @@ app.get('/node/:from/:to', function(req, res) {
 
 });
 
-app.listen('80')
-console.log('> 80 is the magic number.');
+app.listen('1337')
+console.log('> 1337 is the magic number.');
 exports = module.exports = app;
