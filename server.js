@@ -1,6 +1,7 @@
 var express = require('express');
 var fs 		= require('fs');
 var request = require('request');
+var reqPool = {maxSockets: 50};
 var cheerio = require('cheerio');
 var app     = express();
 
@@ -13,7 +14,6 @@ function formatBook(title, authors, price, isbn) {
 	json.isbn = isbn;
 
 	return json;
-
 }
 
 /* Scrape and parse multiple nodes */
@@ -40,7 +40,7 @@ app.get('/node/:from/:to', function(req, res) {
 
 	urls.forEach(function(url) {
 
-		request(url, function(error, response, html) {
+		request({url: url, pool: reqPool}, function(error, response, html) {
 
 			if (!error && response.statusCode == 200) {
 
@@ -99,6 +99,16 @@ app.get('/node/:from/:to', function(req, res) {
 					jsonRes = formatBook(title, authors, price, isbn);
 					booksFile.books.push(jsonRes)
 					booksFound++;
+
+					process.stdout.write("> Found " + booksFound + " books on " + completedRequests + " pages, " +
+										(booksTotal - completedRequests) + " pages left. \r");
+
+					if (completedRequests == urls.length - 1) {
+						fs.writeFile('books.json', JSON.stringify(booksFile, null, 4), function(err) {
+							console.log('\n> File successfully written!');
+						});
+					}
+
 				}
 
 			}
@@ -106,11 +116,6 @@ app.get('/node/:from/:to', function(req, res) {
 			process.stdout.write("> Found " + booksFound + " books on " + completedRequests + " pages, " +
 								(booksTotal - completedRequests) + " pages left. \r");
 
-			if (completedRequests == urls.length - 1) {
-				fs.writeFile('books.json', JSON.stringify(booksFile, null, 4), function(err) {
-					console.log('\n> File successfully written!');
-				});
-			}
 
 			completedRequests++;
 
