@@ -1,6 +1,7 @@
 aka-skrapa
 ==========
 [![Build Status](https://travis-ci.org/14H-G1/aka-skrapa.svg?branch=master)](https://travis-ci.org/14H-G1/aka-skrapa)
+[![Dependency Status](https://david-dm.org/14H-G1/aka-skrapa.svg)](https://david-dm.org/14H-G1/aka-skrapa)
 
 Scrape akademika.no/node/* urls returning title, authors, price and isbn number as json.
 
