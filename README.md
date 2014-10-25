@@ -24,7 +24,7 @@ For example
 ```
 $ sudo node get 7780834 5
 ```
-This will start at akademika.no/node/**7780834** and scrape all the pages through akademika.no/node/**7780838**
+will start at akademika.no/node/**7780834** and scrape all the pages through akademika.no/node/**7780838**
 > Note that the range will count the starting point as a url
 
 The json file will be saved in the same directory as the app was ran.
